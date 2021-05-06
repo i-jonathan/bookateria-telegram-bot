@@ -35,73 +35,52 @@ func processRequest(update goTelegram.Update) {
 	switch command {
 	case "/start":
 		//bot.SendMessage("Hello", chat)
-		var buttons []goTelegram.InlineKeyboard
 		bot.DeleteKeyboard()
 
 		if update.Message.Chat.Type == "private" {
-			buttons = append(buttons, goTelegram.InlineKeyboard{
-				Text: "Accounts",
-				Data: "accounts",
-			})
+			bot.AddButton("Account", "account")
 		}
 
-		buttons = append(buttons, goTelegram.InlineKeyboard{
-			Text: "Documents",
-			Data: "documents",
-		})
-
-		bot.MakeKeyboard(buttons, 2)
+		bot.AddButton("Documents", "documents")
+		bot.MakeKeyboard(2)
 		bot.SendMessage("Hello. Where would you like to go?", chat)
 	}
 }
 
 func processCallback(update goTelegram.Update) {
-	//chat := update.Message.Chat
 	defer bot.AnswerCallback(update.CallbackQuery.ID)
 
-	switch update.CallbackQuery.Data {
+	var command string
+
+	if strings.HasPrefix(update.CallbackQuery.Data, "docID") {
+		command = "docID"
+	} else {
+		command = update.CallbackQuery.Data
+	}
+
+	switch command {
 	case "documents":
-		var buttons []goTelegram.InlineKeyboard
 		bot.DeleteKeyboard()
 
-		if update.Message.Chat.Type == "private" {
-			buttons = append(buttons, goTelegram.InlineKeyboard{
-				Text: "Add",
-				Data: "add",
-			})
-
-			buttons = append(buttons, goTelegram.InlineKeyboard{
-				Text: "Update",
-				Data: "update",
-			})
-
-			buttons = append(buttons, goTelegram.InlineKeyboard{
-				Text: "My Uploads",
-				Data: "mine",
-			})
+		if update.CallbackQuery.Message.Chat.Type == "private" {
+			bot.AddButton("Add", "add")
+			bot.AddButton("Update", "update")
+			bot.AddButton("My Uploads", "mine")
 		}
 
-		buttons = append(buttons, goTelegram.InlineKeyboard{
-			Text: "All",
-			Data: "all",
-		})
+		bot.AddButton("All", "all")
+		bot.AddButton("Search", "search")
+		bot.AddButton("Tags", "tags")
+		bot.AddButton("Categories", "cat")
 
-		buttons = append(buttons, goTelegram.InlineKeyboard{
-			Text: "Search",
-			Data: "search",
-		})
 
-		buttons = append(buttons, goTelegram.InlineKeyboard{
-			Text: "Tags",
-			Data: "tags",
-		})
-
-		buttons = append(buttons, goTelegram.InlineKeyboard{
-			Text: "Categories",
-			Data: "cat",
-		})
-
-		bot.MakeKeyboard(buttons, 3)
+		bot.MakeKeyboard(3)
 		bot.EditMessage(update.CallbackQuery.Message, "Documents")
+	case "all":
+		text := fetchAll("1")
+		bot.EditMessage(update.CallbackQuery.Message, text)
+	case "docID":
+		text := fetchOne(update.CallbackQuery.Data)
+		bot.SendMessage(text, update.CallbackQuery.Message.Chat)
 	}
 }

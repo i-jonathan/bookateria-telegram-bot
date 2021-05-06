@@ -4,3 +4,5 @@ github.com/yoruba-codigy/goTelegram v0.0.0-20210503145516-7d8a9d8aa211 h1:eL69u0
 github.com/yoruba-codigy/goTelegram v0.0.0-20210503145516-7d8a9d8aa211/go.mod h1:7zRat7Ztm5vXcPOGR27pRHsaZxGJ6eaPf5mYFpUv8jM=
 github.com/yoruba-codigy/goTelegram v0.0.0-20210505104534-21e91aab8f46 h1:rRdTdfoAortK3nxc4F5fqOjB5M82Ph6hexz1BAPkrKw=
 github.com/yoruba-codigy/goTelegram v0.0.0-20210505104534-21e91aab8f46/go.mod h1:7zRat7Ztm5vXcPOGR27pRHsaZxGJ6eaPf5mYFpUv8jM=
+github.com/yoruba-codigy/goTelegram v0.0.0-20210505190503-f4c381a720b0 h1:SqySxiUj8exkcvsNWDtsTIoJMvq2yHr9JBR2l5X8YB4=
+github.com/yoruba-codigy/goTelegram v0.0.0-20210505190503-f4c381a720b0/go.mod h1:7zRat7Ztm5vXcPOGR27pRHsaZxGJ6eaPf5mYFpUv8jM=

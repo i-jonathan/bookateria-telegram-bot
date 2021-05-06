@@ -1,20 +1,10 @@
 package main
 
-/*type webHookReqBody struct {
-	Message message `json:"message"`
+type document struct {
+	Id       int    `json:"id"`
+	Title    string `json:"title"`
+	Edition  int    `json:"edition"`
+	Author   string `json:"author"`
+	Summary  string `json:"summary"`
+	FileSlug string `json:"file_slug"`
 }
-
-type message struct {
-	Text string `json:"text"`
-	Chat chat   `json:"chat"`
-}
-
-type chat struct {
-	ID	 int64	`json:"id"`
-	Type string	`json:"type"`
-}
-
-type reply struct {
-	ChatID int64  `json:"chat_id"`
-	Text   string `json:"text"`
-}*/
