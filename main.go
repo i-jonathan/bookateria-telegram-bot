@@ -28,9 +28,10 @@ type Result struct {
 }
 
 var bot goTelegram.Bot
+var apiURL = "https://bookateria-api.herokuapp.com/v1/"
 
 func main() {
-	set := setWebhook("https://8622e90fba28.ngrok.io")
+	set := setWebhook("https://be4563059878.ngrok.io")
 	fmt.Println(set)
 	var err error
 	bot, err = goTelegram.NewBot("891332272:AAHJ8fm_iwdHNO1VhNb0g2BVldpQx35Ooms")
