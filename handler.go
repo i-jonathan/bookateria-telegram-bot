@@ -54,6 +54,8 @@ func processCallback(update goTelegram.Update) {
 
 	if strings.HasPrefix(update.CallbackQuery.Data, "docID") {
 		command = "docID"
+	} else if strings.HasPrefix(update.CallbackQuery.Data, "all") {
+		command = "all"
 	} else {
 		command = update.CallbackQuery.Data
 	}
@@ -68,7 +70,7 @@ func processCallback(update goTelegram.Update) {
 			bot.AddButton("My Uploads", "mine")
 		}
 
-		bot.AddButton("All", "all")
+		bot.AddButton("All", "all-1")
 		bot.AddButton("Search", "search")
 		bot.AddButton("Tags", "tags")
 		bot.AddButton("Categories", "cat")
@@ -77,7 +79,7 @@ func processCallback(update goTelegram.Update) {
 		bot.MakeKeyboard(3)
 		bot.EditMessage(update.CallbackQuery.Message, "Documents")
 	case "all":
-		text := fetchAll("1")
+		text := fetchAll(update.CallbackQuery.Data)
 		bot.EditMessage(update.CallbackQuery.Message, text)
 	case "docID":
 		text := fetchOne(update.CallbackQuery.Data)

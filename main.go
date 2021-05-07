@@ -31,7 +31,7 @@ var bot goTelegram.Bot
 var apiURL = "https://bookateria-api.herokuapp.com/v1/"
 
 func main() {
-	set := setWebhook("https://c0eeb7bdaded.ngrok.io")
+	set := setWebhook("https://be4563059878.ngrok.io")
 	fmt.Println(set)
 	var err error
 	bot, err = goTelegram.NewBot("891332272:AAHJ8fm_iwdHNO1VhNb0g2BVldpQx35Ooms")
