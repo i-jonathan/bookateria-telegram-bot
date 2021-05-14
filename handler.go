@@ -17,6 +17,15 @@ func handler(update goTelegram.Update) {
 }
 
 func processRequest(update goTelegram.Update) {
+
+	if query, ok := get(searchQueries, update.Message.Chat.ID); ok {
+		if query.User == update.Message.From.ID {
+			query.Text = update.Message.Text
+			search(query)
+			searchQueries = remove(searchQueries, query)
+		}
+	}
+
 	chat := update.Message.Chat
 
 	parts := strings.Fields(update.Message.Text)
@@ -83,5 +92,11 @@ func processCallback(update goTelegram.Update) {
 	case "docID":
 		text := fetchOne(update.CallbackQuery.Data)
 		bot.SendMessage(text, update.CallbackQuery.Message.Chat)
+
+	case "search":
+		bot.DeleteKeyboard()
+		text := "Type Your Query: "
+		searchQueries = append(searchQueries, query{User: update.CallbackQuery.From.ID, Chat_ID: update.CallbackQuery.Message.Chat.ID, Message_ID: update.CallbackQuery.Message.MessageID})
+		bot.EditMessage(update.CallbackQuery.Message, text)
 	}
 }

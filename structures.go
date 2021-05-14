@@ -16,3 +16,10 @@ type document struct {
 	Summary  string `json:"summary"`
 	FileSlug string `json:"file_slug"`
 }
+
+type query struct {
+	User       int
+	Chat_ID    int
+	Message_ID int
+	Text       string
+}

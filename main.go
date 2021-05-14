@@ -28,16 +28,26 @@ type Result struct {
 
 var bot goTelegram.Bot
 var apiURL = "https://bookateria-api.herokuapp.com/v1/"
+var searchQueries []query
 
 func main() {
 	var err error
 	bot, err = goTelegram.NewBot("891332272:AAG80PYkGjjdEJ-rRIyDxdRpAnVoKTIPqZU")
 	setWebhook("https://94f93f40a9bb.ngrok.io")
 
+	bot, err = goTelegram.NewBot("891332272:AAG80PYkGjjdEJ-rRIyDxdRpAnVoKTIPqZU")
+
 	if err != nil {
 		log.Println(err)
 	}
+
+	fmt.Printf("Bot Name: %s\nBot Username: %s\n", bot.Me.Firstname, bot.Me.Username)
+
 	bot.SetHandler(handler)
+
+	set := setWebhook("https://1c4b391c2c3b.ngrok.io")
+	fmt.Println(set)
+
 	log.Println("Starting Server")
 	err = http.ListenAndServe(":5000", http.HandlerFunc(bot.UpdateHandler))
 
