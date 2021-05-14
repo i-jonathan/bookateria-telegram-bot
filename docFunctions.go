@@ -7,12 +7,14 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+
+	"github.com/yoruba-codigy/goTelegram"
 )
 
 func fetchAll(callbackCode string) string {
 	page := strings.Split(callbackCode, "-")[1]
 	bot.DeleteKeyboard()
-	var allDocs []document
+	var response ResponseStruct
 
 	url := apiURL + "document?page=" + page + "&page_size=1"
 
@@ -23,14 +25,14 @@ func fetchAll(callbackCode string) string {
 		return ""
 	}
 
-	err = json.NewDecoder(resp.Body).Decode(&allDocs)
+	err = json.NewDecoder(resp.Body).Decode(&response)
 
 	if err != nil {
 		log.Println(err)
 		return ""
 	}
 
-	if len(allDocs) == 0 {
+	if len(response.Result) == 0 {
 		return "No documents available"
 	}
 
@@ -38,43 +40,31 @@ func fetchAll(callbackCode string) string {
 
 	// Format text to be displayed in message
 
-	for _, doc := range allDocs {
+	for _, doc := range response.Result {
 		text += fmt.Sprintf("%d. %s by %s\n", doc.Id, doc.Title, doc.Author)
-		bot.AddButton(strconv.Itoa(doc.Id), "docID-" + strconv.Itoa(doc.Id))
+		bot.AddButton(strconv.Itoa(doc.Id), "docID-"+strconv.Itoa(doc.Id))
 	}
 
-	bot.MakeKeyboard(len(allDocs))
+	bot.MakeKeyboard(len(response.Result))
 
 	// Add button to go back
 	bot.AddButton("Back", "documents")
 
 	// Check if there is need for a previous page
-	current, err := strconv.Atoi(page)
-	if current - 1 != 0 {
-		bot.AddButton("Prev", "all-" + strconv.Itoa(current-1))
+	col := 0
+	if response.Previous {
+		bot.AddButton("Prev", "all-"+strconv.Itoa(response.Page - 1))
+		col += 1
 	}
 
-	// Check if there is need for a next page
-	url = apiURL + "document?page=" + strconv.Itoa(current+1) + "&page_size=1"
-
-	resp, err = http.Get(url)
-
-	if err != nil {
-		log.Println(err)
-		return ""
+	if response.Next {
+		bot.AddButton("Next", "all-"+strconv.Itoa(response.Page + 1))
+		col += 1
 	}
 
-	err = json.NewDecoder(resp.Body).Decode(&allDocs)
-
-	if err != nil {
-		log.Println(err)
-		return ""
+	if col != 0 {
+		bot.MakeKeyboard(col)
 	}
-
-	if len(allDocs) != 0 {
-		bot.AddButton("Next", "all-" + strconv.Itoa(current+1))
-	}
-	bot.MakeKeyboard(2)
 
 	return text
 }

@@ -3,7 +3,6 @@ package main
 import (
 	"bytes"
 	"encoding/json"
-	"fmt"
 	"github.com/yoruba-codigy/goTelegram"
 	"io"
 	"log"
@@ -15,7 +14,7 @@ type setWebHook struct {
 }
 
 type getWebHookInfo struct {
-	Ok     bool `json:"ok"`
+	Ok     bool   `json:"ok"`
 	Result Result `json:"result"`
 }
 
@@ -29,17 +28,26 @@ type Result struct {
 
 var bot goTelegram.Bot
 var apiURL = "https://bookateria-api.herokuapp.com/v1/"
+var searchQueries []query
 
 func main() {
-	set := setWebhook("https://be4563059878.ngrok.io")
-	fmt.Println(set)
 	var err error
-	bot, err = goTelegram.NewBot("891332272:AAHJ8fm_iwdHNO1VhNb0g2BVldpQx35Ooms")
+	bot, err = goTelegram.NewBot("891332272:AAG80PYkGjjdEJ-rRIyDxdRpAnVoKTIPqZU")
+	setWebhook("https://94f93f40a9bb.ngrok.io")
+
+	bot, err = goTelegram.NewBot("891332272:AAG80PYkGjjdEJ-rRIyDxdRpAnVoKTIPqZU")
 
 	if err != nil {
 		log.Println(err)
 	}
+
+	fmt.Printf("Bot Name: %s\nBot Username: %s\n", bot.Me.Firstname, bot.Me.Username)
+
 	bot.SetHandler(handler)
+
+	set := setWebhook("https://1c4b391c2c3b.ngrok.io")
+	fmt.Println(set)
+
 	log.Println("Starting Server")
 	err = http.ListenAndServe(":5000", http.HandlerFunc(bot.UpdateHandler))
 
@@ -51,9 +59,7 @@ func main() {
 }
 
 func setWebhook(webHookURL string) bool {
-	url := "https://api.telegram.org/bot891332272:AAHJ8fm_iwdHNO1VhNb0g2BVldpQx35Ooms/"
-
-	resp, err := http.Get(url + "getWebhookInfo")
+	resp, err := http.Get(bot.APIURL + "/getWebhookInfo")
 
 	if err != nil {
 		log.Println(err)
@@ -82,7 +88,7 @@ func setWebhook(webHookURL string) bool {
 		return false
 	}
 
-	resp, err = http.Post(url + "setWebhook", "application/json", bytes.NewBuffer(jsonBody))
+	resp, err = http.Post(bot.APIURL+"/setWebhook", "application/json", bytes.NewBuffer(jsonBody))
 
 	if err != nil {
 		log.Println(err)
@@ -97,7 +103,7 @@ func setWebhook(webHookURL string) bool {
 	}(resp.Body)
 
 	if resp.StatusCode != http.StatusOK {
-		log.Println(resp.StatusCode)
+		log.Println(resp.Status)
 		log.Println("Status not okay")
 		return false
 	}
