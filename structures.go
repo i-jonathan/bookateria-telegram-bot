@@ -1,5 +1,13 @@
 package main
 
+type ResponseStruct struct {
+	Previous bool        `json:"previous"`
+	Next     bool        `json:"next"`
+	Page     int         `json:"page"`
+	Count    int64       `json:"count"`
+	Result   []document `json:"result"`
+}
+
 type document struct {
 	Id       int    `json:"id"`
 	Title    string `json:"title"`

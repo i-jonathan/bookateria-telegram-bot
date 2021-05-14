@@ -75,7 +75,6 @@ func processCallback(update goTelegram.Update) {
 		bot.AddButton("Tags", "tags")
 		bot.AddButton("Categories", "cat")
 
-
 		bot.MakeKeyboard(3)
 		bot.EditMessage(update.CallbackQuery.Message, "Documents")
 	case "all":
