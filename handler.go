@@ -18,11 +18,15 @@ func handler(update goTelegram.Update) {
 
 func processRequest(update goTelegram.Update) {
 
-	if query, ok := get(searchQueries, update.Message.Chat.ID); ok {
-		if query.User == update.Message.From.ID {
-			query.Text = update.Message.Text
-			search(query)
-			searchQueries = remove(searchQueries, query)
+	if reply, ok := get(replies, update.Message.Chat.ID); ok {
+		if reply.User == update.Message.From.ID {
+			reply.Text = update.Message.Text
+			switch reply.Type {
+			case "search":
+				search(reply)
+			case "login":
+				handleLogin(reply)
+			}
 		}
 	}
 
@@ -65,11 +69,21 @@ func processCallback(update goTelegram.Update) {
 		command = "docID"
 	} else if strings.HasPrefix(update.CallbackQuery.Data, "all") {
 		command = "all"
+	} else if strings.HasPrefix(update.CallbackQuery.Data, "contsearch") {
+		command = "contsearch"
 	} else {
 		command = update.CallbackQuery.Data
 	}
 
 	switch command {
+	case "account":
+		bot.DeleteKeyboard()
+		bot.AddButton("Login", "login")
+		bot.AddButton("Register", "register")
+		bot.AddButton("Logout", "logout")
+		bot.MakeKeyboard(3)
+		bot.EditMessage(update.CallbackQuery.Message, "Accounts")
+
 	case "documents":
 		bot.DeleteKeyboard()
 
@@ -96,7 +110,32 @@ func processCallback(update goTelegram.Update) {
 	case "search":
 		bot.DeleteKeyboard()
 		text := "Type Your Query: "
-		searchQueries = append(searchQueries, query{User: update.CallbackQuery.From.ID, Chat_ID: update.CallbackQuery.Message.Chat.ID, Message_ID: update.CallbackQuery.Message.MessageID})
+		new_reply := query{User: update.CallbackQuery.From.ID,
+			Chat_ID:    update.CallbackQuery.Message.Chat.ID,
+			Message_ID: update.CallbackQuery.Message.MessageID,
+			Type:       "search"}
+		replies = add(replies, new_reply)
+		bot.EditMessage(update.CallbackQuery.Message, text)
+
+	case "contsearch":
+		bot.DeleteKeyboard()
+		new_result := query{
+			User:       update.CallbackQuery.From.ID,
+			Message_ID: update.CallbackQuery.Message.MessageID,
+			Chat_ID:    update.CallbackQuery.Message.Chat.ID,
+			Text:       update.CallbackQuery.Data,
+		}
+		search(new_result)
+
+	case "login":
+		bot.DeleteKeyboard()
+		text := "Please Enter Your Bookateria Account Credentials\n\nUsername:\nPassword:"
+		new_reply := query{User: update.CallbackQuery.From.ID,
+			Chat_ID:    update.CallbackQuery.Message.Chat.ID,
+			Message_ID: update.CallbackQuery.Message.MessageID,
+			Type:       "login"}
+
+		replies = add(replies, new_reply)
 		bot.EditMessage(update.CallbackQuery.Message, text)
 	}
 }
