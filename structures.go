@@ -1,10 +1,10 @@
 package main
 
 type ResponseStruct struct {
-	Previous bool        `json:"previous"`
-	Next     bool        `json:"next"`
-	Page     int         `json:"page"`
-	Count    int64       `json:"count"`
+	Previous bool       `json:"previous"`
+	Next     bool       `json:"next"`
+	Page     int        `json:"page"`
+	Count    int64      `json:"count"`
 	Result   []document `json:"result"`
 }
 
@@ -22,4 +22,10 @@ type query struct {
 	Chat_ID    int
 	Message_ID int
 	Text       string
+}
+
+type Login struct {
+	Email    string `json:"email"`
+	Password string `json:"password"`
+	StayIn   bool   `json:"stay_in"`
 }
