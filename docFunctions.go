@@ -7,8 +7,6 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
-
-	"github.com/yoruba-codigy/goTelegram"
 )
 
 func fetchAll(callbackCode string) string {
@@ -53,12 +51,12 @@ func fetchAll(callbackCode string) string {
 	// Check if there is need for a previous page
 	col := 0
 	if response.Previous {
-		bot.AddButton("Prev", "all-"+strconv.Itoa(response.Page - 1))
+		bot.AddButton("Prev", "all-"+strconv.Itoa(response.Page-1))
 		col += 1
 	}
 
 	if response.Next {
-		bot.AddButton("Next", "all-"+strconv.Itoa(response.Page + 1))
+		bot.AddButton("Next", "all-"+strconv.Itoa(response.Page+1))
 		col += 1
 	}
 
