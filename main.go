@@ -34,7 +34,7 @@ var replies []query
 func main() {
 	var err error
 	bot, err = goTelegram.NewBot("891332272:AAG80PYkGjjdEJ-rRIyDxdRpAnVoKTIPqZU")
-	setWebhook("https://94f93f40a9bb.ngrok.io")
+	setWebhook("https://cfcba9383e92.ngrok.io")
 
 	bot, err = goTelegram.NewBot("891332272:AAG80PYkGjjdEJ-rRIyDxdRpAnVoKTIPqZU")
 

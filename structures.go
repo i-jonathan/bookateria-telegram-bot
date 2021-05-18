@@ -25,3 +25,9 @@ type query struct {
 	Type       string //Query Type e.g Search, Login e.t.c
 	Text       string //Text Of The Incoming update
 }
+
+type Login struct {
+	Email    string `json:"email"`
+	Password string `json:"password"`
+	StayIn   bool   `json:"stay_in"`
+}
