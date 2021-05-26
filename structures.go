@@ -18,16 +18,22 @@ type document struct {
 }
 
 type query struct {
-	User       int    //User
-	Chat_ID    int    //Chat_ID Of The Incoming Text
-	Message_ID int    //Message ID Of The Text To Be Updated
-	Level      int    //Question Level For Multi-Level Questions
-	Type       string //Query Type e.g Search, Login e.t.c
-	Text       string //Text Of The Incoming update
+	User      int    //User
+	ChatID    int    //ChatID Of The Incoming Text
+	MessageID int    //Message ID Of The Text To Be Updated
+	Level     int    //Question Level For Multi-Level Questions
+	Type      string //Query Type e.g Search, Login e.t.c
+	Text      string //Text Of The Incoming update
 }
 
 type Login struct {
 	Email    string `json:"email"`
 	Password string `json:"password"`
 	StayIn   bool   `json:"stay_in"`
+}
+
+type LoginResponse struct {
+	Name   string `json:"name"`
+	Value  string `json:"value"`
+	Expiry string `json:"expiry"`
 }

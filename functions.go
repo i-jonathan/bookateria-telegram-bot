@@ -3,9 +3,9 @@ package main
 func add(list []query, element query) []query {
 	for index, query := range list {
 		if query.User == element.User {
-			if query.Chat_ID == element.Chat_ID {
+			if query.ChatID == element.ChatID {
 				list[index].Type = element.Type
-				list[index].Message_ID = element.Message_ID
+				list[index].MessageID = element.MessageID
 				return list
 			}
 		}
@@ -15,7 +15,7 @@ func add(list []query, element query) []query {
 
 func get(list []query, chat_id int) (query, bool) {
 	for _, query := range list {
-		if query.Chat_ID == chat_id {
+		if query.ChatID == chat_id {
 			return query, true
 		}
 	}

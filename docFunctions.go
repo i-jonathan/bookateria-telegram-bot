@@ -97,7 +97,7 @@ func fetchOne(callbackCode string) string {
 Params: query
 returns: nil
 
-This funcntion handles document searching based on the text sent by the user
+This function handles document searching based on the text sent by the user
 */
 func search(query query) {
 
@@ -110,27 +110,27 @@ func search(query query) {
 	var response ResponseStruct
 
 	page := 1
-	search_text := query.Text
+	searchText := query.Text
 
 	//check if this function is called from a prev or next button
 	if strings.HasPrefix(query.Text, "contsearch") {
 		parts := strings.Split(query.Text, "-")
-		search_text = parts[1]
+		searchText = parts[1]
 		page, _ = strconv.Atoi(parts[2])
 	}
 
 	//Initialize the chat to send document search results to
-	update.Message.MessageID = query.Message_ID
-	update.Message.Chat.ID = query.Chat_ID
+	update.Message.MessageID = query.MessageID
+	update.Message.Chat.ID = query.ChatID
 
 	//Make request to the api for documents with the specified title
-	resp, err := http.Get(apiURL + "document?page_size=1&search=" + search_text + "&page=" + strconv.Itoa(page))
+	resp, err := http.Get(apiURL + "document?page_size=1&search=" + searchText + "&page=" + strconv.Itoa(page))
 
 	if err != nil {
 		log.Println(err)
 		bot.AddButton("Back", "documents")
 		bot.MakeKeyboard(1)
-		bot.EditMessage(update.Message, "An Error Occured While Processing Your Request")
+		bot.EditMessage(update.Message, "An Error Occurred While Processing Your Request")
 		return
 	}
 
@@ -140,7 +140,7 @@ func search(query query) {
 		log.Println(err)
 		bot.AddButton("Back", "documents")
 		bot.MakeKeyboard(1)
-		bot.EditMessage(update.Message, "Couldn't Find Any Document That Matches Your Search Term: "+search_text)
+		bot.EditMessage(update.Message, "Couldn't Find Any Document That Matches Your Search Term: "+searchText)
 		return
 	}
 
@@ -153,7 +153,7 @@ func search(query query) {
 	}
 
 	//Process returned results from the api
-	text := fmt.Sprintf("Showing Results For: %s\n", search_text)
+	text := fmt.Sprintf("Showing Results For: %s\n", searchText)
 
 	for index, doc := range response.Result {
 		text += fmt.Sprintf("%d. %s by %s\n", index+1, doc.Title, doc.Author)
@@ -166,12 +166,12 @@ func search(query query) {
 	col := 0
 
 	if response.Previous == true {
-		bot.AddButton("Prev", "contsearch-"+search_text+"-"+strconv.Itoa(page-1))
+		bot.AddButton("Prev", "contsearch-"+searchText+"-"+strconv.Itoa(page-1))
 		col += 1
 	}
 
 	if response.Next == true {
-		bot.AddButton("Next", "contsearch-"+search_text+"-"+strconv.Itoa(page+1))
+		bot.AddButton("Next", "contsearch-"+searchText+"-"+strconv.Itoa(page+1))
 		col += 1
 	}
 
@@ -181,7 +181,7 @@ func search(query query) {
 
 	//Add button to go back to the documents Menu
 	//if e.g user doesn't find desired document and wants to try another search keyword
-	bot.AddButton("Douments Menu", "documents")
+	bot.AddButton("Documents Menu", "documents")
 	bot.MakeKeyboard(1)
 
 	bot.EditMessage(update.Message, text)

@@ -33,8 +33,6 @@ var replies []query
 
 func main() {
 	var err error
-	bot, err = goTelegram.NewBot("891332272:AAG80PYkGjjdEJ-rRIyDxdRpAnVoKTIPqZU")
-	setWebhook("https://cfcba9383e92.ngrok.io")
 
 	bot, err = goTelegram.NewBot("891332272:AAG80PYkGjjdEJ-rRIyDxdRpAnVoKTIPqZU")
 
@@ -46,7 +44,7 @@ func main() {
 
 	bot.SetHandler(handler)
 
-	set := setWebhook("https://7ffa33018f93.ngrok.io")
+	set := setWebhook("https://a6a864043e50.ngrok.io")
 	fmt.Println(set)
 
 	log.Println("Starting Server")
