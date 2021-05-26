@@ -38,7 +38,7 @@ func handleLogin(update query) {
 
 	var resp *http.Response
 
-	resp, err = http.Post(apiURL + "auth/login", "application/json", bytes.NewBuffer(postBody))
+	resp, err = http.Post(apiURL+"auth/login", "application/json", bytes.NewBuffer(postBody))
 
 	if err != nil {
 		log.Println(err)
