@@ -2,11 +2,15 @@ package main
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
+	"github.com/go-redis/redis/v8"
 	"github.com/yoruba-codigy/goTelegram"
 	"log"
 	"net/http"
+	"strconv"
 	"strings"
+	"time"
 )
 
 func handleLogin(update query) {
@@ -27,7 +31,7 @@ func handleLogin(update query) {
 	loginDetails := Login{
 		Email:    messageParts[0],
 		Password: messageParts[1],
-		//StayIn:   true,
+		StayIn:   true,
 	}
 
 	postBody, err := json.Marshal(loginDetails)
@@ -51,8 +55,21 @@ func handleLogin(update query) {
 	}
 
 	log.Println(loginData.Value)
-	// Save token in redis and all of that
-	// For now, return the token
 
-	bot.EditMessage(replyUpdate.Message, loginData.Value)
+	// Save token to redis
+	var ctx = context.Background()
+
+	client := redis.NewClient(&redis.Options{
+		Addr: "127.0.0.1:6379",
+		DB: 0,
+	})
+
+	redisTime := 720 * time.Hour
+
+	err = client.Set(ctx, strconv.Itoa(update.UserID), loginData.Value, redisTime).Err()
+
+	if err != nil {
+		bot.EditMessage(replyUpdate.Message, "Login Unsuccessful. Try again shortly")
+	}
+	bot.EditMessage(replyUpdate.Message, "Signed in Successfully.")
 }

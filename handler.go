@@ -19,7 +19,7 @@ func handler(update goTelegram.Update) {
 func processRequest(update goTelegram.Update) {
 
 	if reply, ok := get(replies, update.Message.Chat.ID); ok {
-		if reply.User == update.Message.From.ID {
+		if reply.UserID == update.Message.From.ID {
 			reply.Text = update.Message.Text
 			switch reply.Type {
 			case "search":
@@ -110,7 +110,7 @@ func processCallback(update goTelegram.Update) {
 	case "search":
 		bot.DeleteKeyboard()
 		text := "Type Your Query: "
-		newReply := query{User: update.CallbackQuery.From.ID,
+		newReply := query{UserID: update.CallbackQuery.From.ID,
 			ChatID:    update.CallbackQuery.Message.Chat.ID,
 			MessageID: update.CallbackQuery.Message.MessageID,
 			Type:      "search"}
@@ -120,7 +120,7 @@ func processCallback(update goTelegram.Update) {
 	case "contsearch":
 		bot.DeleteKeyboard()
 		newResult := query{
-			User:      update.CallbackQuery.From.ID,
+			UserID:    update.CallbackQuery.From.ID,
 			MessageID: update.CallbackQuery.Message.MessageID,
 			ChatID:    update.CallbackQuery.Message.Chat.ID,
 			Text:      update.CallbackQuery.Data,
@@ -131,7 +131,7 @@ func processCallback(update goTelegram.Update) {
 		bot.DeleteKeyboard()
 		text := "Please Enter Your Bookateria Account Credentials in the format below\n\nEmail:\nPassword:\n\n" +
 			"Example: \njohndoe@gmail.com\nadmin@123!"
-		newReply := query{User: update.CallbackQuery.From.ID,
+		newReply := query{UserID: update.CallbackQuery.From.ID,
 			ChatID:    update.CallbackQuery.Message.Chat.ID,
 			MessageID: update.CallbackQuery.Message.MessageID,
 			Type:      "login"}

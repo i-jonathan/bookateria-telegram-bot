@@ -18,7 +18,7 @@ type document struct {
 }
 
 type query struct {
-	User      int    //User
+	UserID    int    //UserID
 	ChatID    int    //ChatID Of The Incoming Text
 	MessageID int    //Message ID Of The Text To Be Updated
 	Level     int    //Question Level For Multi-Level Questions
