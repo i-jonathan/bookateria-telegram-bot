@@ -34,10 +34,6 @@ func handleLogin(update query) {
 		StayIn:   true,
 	}
 
-	err := bot.DeleteMessage(replyUpdate.Message)
-	if err != nil {
-		log.Println(err)
-	}
 	postBody, err := json.Marshal(loginDetails)
 
 	if err != nil {

@@ -171,7 +171,7 @@ func search(query query) {
 
 	bot.MakeKeyboard(len(response.Result))
 
-	//Add prev and nexr buttons based on results returned from the api
+	//Add prev and next buttons based on results returned from the api
 	col := 0
 
 	if response.Previous == true {
