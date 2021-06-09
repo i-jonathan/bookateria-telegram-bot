@@ -2,6 +2,8 @@ package main
 
 import (
 	"github.com/yoruba-codigy/goTelegram"
+	"log"
+
 	//"net/http"
 	"strings"
 )
@@ -56,12 +58,20 @@ func processRequest(update goTelegram.Update) {
 
 		bot.AddButton("Documents", "documents")
 		bot.MakeKeyboard(2)
-		bot.SendMessage("Hello. Where would you like to go?", chat)
+		err := bot.SendMessage("Hello. Where would you like to go?", chat)
+		if err != nil {
+			log.Println(err)
+		}
 	}
 }
 
 func processCallback(update goTelegram.Update) {
-	defer bot.AnswerCallback(update.CallbackQuery.ID)
+	defer func(bot *goTelegram.Bot, callbackID string) {
+		err := bot.AnswerCallback(callbackID)
+		if err != nil {
+			log.Println(err)
+		}
+	}(&bot, update.CallbackQuery.ID)
 
 	var command string
 
@@ -82,7 +92,10 @@ func processCallback(update goTelegram.Update) {
 		bot.AddButton("Register", "register")
 		bot.AddButton("Logout", "logout")
 		bot.MakeKeyboard(3)
-		bot.EditMessage(update.CallbackQuery.Message, "Accounts")
+		err := bot.EditMessage(update.CallbackQuery.Message, "Accounts")
+		if err != nil {
+			log.Println(err)
+		}
 
 	case "documents":
 		bot.DeleteKeyboard()
@@ -99,13 +112,22 @@ func processCallback(update goTelegram.Update) {
 		bot.AddButton("Categories", "cat")
 
 		bot.MakeKeyboard(3)
-		bot.EditMessage(update.CallbackQuery.Message, "Documents")
+		err := bot.EditMessage(update.CallbackQuery.Message, "Documents")
+		if err != nil {
+			log.Println(err)
+		}
 	case "all":
 		text := fetchAll(update.CallbackQuery.Data)
-		bot.EditMessage(update.CallbackQuery.Message, text)
+		err := bot.EditMessage(update.CallbackQuery.Message, text)
+		if err != nil {
+			log.Println(err)
+		}
 	case "docID":
 		text := fetchOne(update.CallbackQuery.Data)
-		bot.SendMessage(text, update.CallbackQuery.Message.Chat)
+		err := bot.SendMessage(text, update.CallbackQuery.Message.Chat)
+		if err != nil {
+			log.Println(err)
+		}
 
 	case "search":
 		bot.DeleteKeyboard()
@@ -115,7 +137,10 @@ func processCallback(update goTelegram.Update) {
 			MessageID: update.CallbackQuery.Message.MessageID,
 			Type:      "search"}
 		replies = add(replies, newReply)
-		bot.EditMessage(update.CallbackQuery.Message, text)
+		err := bot.EditMessage(update.CallbackQuery.Message, text)
+		if err != nil {
+			log.Println(err)
+		}
 
 	case "contsearch":
 		bot.DeleteKeyboard()
@@ -137,6 +162,9 @@ func processCallback(update goTelegram.Update) {
 			Type:      "login"}
 
 		replies = add(replies, newReply)
-		bot.EditMessage(update.CallbackQuery.Message, text)
+		err := bot.EditMessage(update.CallbackQuery.Message, text)
+		if err != nil {
+			log.Println(err)
+		}
 	}
 }

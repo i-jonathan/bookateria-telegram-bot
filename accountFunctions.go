@@ -34,6 +34,10 @@ func handleLogin(update query) {
 		StayIn:   true,
 	}
 
+	err := bot.DeleteMessage(replyUpdate.Message)
+	if err != nil {
+		log.Println(err)
+	}
 	postBody, err := json.Marshal(loginDetails)
 
 	if err != nil {
@@ -69,7 +73,13 @@ func handleLogin(update query) {
 	err = client.Set(ctx, strconv.Itoa(update.UserID), loginData.Value, redisTime).Err()
 
 	if err != nil {
-		bot.EditMessage(replyUpdate.Message, "Login Unsuccessful. Try again shortly")
+		err := bot.EditMessage(replyUpdate.Message, "Login Unsuccessful. Try again shortly")
+		if err != nil {
+			log.Println(err)
+		}
 	}
-	bot.EditMessage(replyUpdate.Message, "Signed in Successfully.")
+	err = bot.EditMessage(replyUpdate.Message, "Signed in Successfully.")
+	if err != nil {
+		log.Println(err)
+	}
 }

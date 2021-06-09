@@ -130,7 +130,10 @@ func search(query query) {
 		log.Println(err)
 		bot.AddButton("Back", "documents")
 		bot.MakeKeyboard(1)
-		bot.EditMessage(update.Message, "An Error Occurred While Processing Your Request")
+		err := bot.EditMessage(update.Message, "An Error Occurred While Processing Your Request")
+		if err != nil {
+			log.Println(err)
+		}
 		return
 	}
 
@@ -140,7 +143,10 @@ func search(query query) {
 		log.Println(err)
 		bot.AddButton("Back", "documents")
 		bot.MakeKeyboard(1)
-		bot.EditMessage(update.Message, "Couldn't Find Any Document That Matches Your Search Term: "+searchText)
+		err := bot.EditMessage(update.Message, "Couldn't Find Any Document That Matches Your Search Term: "+searchText)
+		if err != nil {
+			log.Println(err)
+		}
 		return
 	}
 
@@ -148,7 +154,10 @@ func search(query query) {
 	if len(response.Result) == 0 {
 		bot.AddButton("Back", "documents")
 		bot.MakeKeyboard(1)
-		bot.EditMessage(update.Message, "Couldn't Find Any Document That Matches Your Search Term")
+		err := bot.EditMessage(update.Message, "Couldn't Find Any Document That Matches Your Search Term")
+		if err != nil {
+			log.Println(err)
+		}
 		return
 	}
 
@@ -184,5 +193,8 @@ func search(query query) {
 	bot.AddButton("Documents Menu", "documents")
 	bot.MakeKeyboard(1)
 
-	bot.EditMessage(update.Message, text)
+	err = bot.EditMessage(update.Message, text)
+	if err != nil {
+		log.Println(err)
+	}
 }
