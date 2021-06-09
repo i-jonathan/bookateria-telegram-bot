@@ -27,11 +27,11 @@ func processRequest(update goTelegram.Update) {
 			case "search":
 				search(reply)
 			case "login":
-				handleLogin(reply)
 				err := bot.DeleteMessage(update.Message)
 				if err != nil {
 					log.Println(err)
 				}
+				handleLogin(reply)
 			}
 		}
 	}
