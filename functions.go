@@ -2,47 +2,56 @@ package main
 
 import (
 	"context"
-	"github.com/go-redis/redis/v8"
+	"fmt"
 	"strconv"
+
+	"github.com/go-redis/redis/v8"
 )
 
-func add(list []query, element query) []query {
-	for index, query := range list {
+func add(list []*query, element *query) []*query {
+	for _, query := range list {
 		if query.UserID == element.UserID {
 			if query.ChatID == element.ChatID {
-				list[index].Type = element.Type
-				list[index].MessageID = element.MessageID
-				return list
+				list = removeByChatID(list, element.ChatID)
+				return add(list, element)
 			}
 		}
 	}
 	return append(list, element)
 }
 
-func get(list []query, chatID int) (query, bool) {
+func get(list []*query, chatID int) (*query, bool) {
 	for _, query := range list {
 		if query.ChatID == chatID {
 			return query, true
 		}
 	}
-	return query{}, false
+	return &query{}, false
 }
 
-func remove(list []query, query query) []query {
+func remove(list []*query, query *query) []*query {
 	for index, user := range list {
-		if user.UserID == query.UserID {
+		if user.ChatID == query.ChatID {
 			return append(list[:index], list[index+1:]...)
 		}
 	}
 	return list
 }
 
+func removeByChatID(list []*query, chatID int) []*query {
+	for index, user := range list {
+		if user.ChatID == chatID {
+			return append(list[:index], list[index+1:]...)
+		}
+	}
+	return list
+}
 
 func getToken(chatID int) (string, error) {
 	ctx := context.Background()
 	client := redis.NewClient(&redis.Options{
 		Addr: "127.0.0.1:6379",
-		DB: 0,
+		DB:   0,
 	})
 
 	token, err := client.Get(ctx, strconv.Itoa(chatID)).Result()
@@ -52,4 +61,10 @@ func getToken(chatID int) (string, error) {
 	}
 
 	return token, nil
+}
+
+func printReplies() {
+	for _, i := range replies {
+		fmt.Println(i)
+	}
 }
