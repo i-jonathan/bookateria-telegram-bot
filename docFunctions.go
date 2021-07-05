@@ -1,13 +1,19 @@
 package main
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
-	"github.com/yoruba-codigy/goTelegram"
+	"io"
+	"io/ioutil"
 	"log"
+	"mime/multipart"
 	"net/http"
+	"os"
 	"strconv"
 	"strings"
+
+	"github.com/yoruba-codigy/goTelegram"
 )
 
 func fetchAll(callbackCode string) string {
@@ -103,7 +109,7 @@ func search(query query) {
 
 	//remove query from list of awaiting replies
 	defer func() {
-		replies = remove(replies, query)
+		replies = remove(replies, &query)
 	}()
 
 	var update goTelegram.Update
@@ -130,7 +136,9 @@ func search(query query) {
 		log.Println(err)
 		bot.AddButton("Back", "documents")
 		bot.MakeKeyboard(1)
-		bot.EditMessage(update.Message, "An Error Occurred While Processing Your Request")
+		if err := bot.EditMessage(update.Message, "An Error Occurred While Processing Your Request"); err != nil {
+			log.Println(err)
+		}
 		return
 	}
 
@@ -140,7 +148,9 @@ func search(query query) {
 		log.Println(err)
 		bot.AddButton("Back", "documents")
 		bot.MakeKeyboard(1)
-		bot.EditMessage(update.Message, "Couldn't Find Any Document That Matches Your Search Term: "+searchText)
+		if err := bot.EditMessage(update.Message, "Couldn't Find Any Document That Matches Your Search Term: "+searchText); err != nil {
+			log.Println(err)
+		}
 		return
 	}
 
@@ -148,7 +158,9 @@ func search(query query) {
 	if len(response.Result) == 0 {
 		bot.AddButton("Back", "documents")
 		bot.MakeKeyboard(1)
-		bot.EditMessage(update.Message, "Couldn't Find Any Document That Matches Your Search Term")
+		if err := bot.EditMessage(update.Message, "Couldn't Find Any Document That Matches Your Search Term"); err != nil {
+			log.Println(err)
+		}
 		return
 	}
 
@@ -162,7 +174,7 @@ func search(query query) {
 
 	bot.MakeKeyboard(len(response.Result))
 
-	//Add prev and nexr buttons based on results returned from the api
+	//Add prev and next buttons based on results returned from the api
 	col := 0
 
 	if response.Previous == true {
@@ -184,5 +196,177 @@ func search(query query) {
 	bot.AddButton("Documents Menu", "documents")
 	bot.MakeKeyboard(1)
 
-	bot.EditMessage(update.Message, text)
+	if err := bot.EditMessage(update.Message, text); err != nil {
+		log.Println(err)
+	}
+}
+
+func giveFeedback(reply *query, err bool) {
+	var text string
+	var msg goTelegram.Update
+
+	msg.Message.MessageID = reply.MessageID
+	msg.Message.Chat.ID = reply.ChatID
+
+	if err {
+		text = "There Was An Error Processing Your Request, Please Try Again Later"
+	} else {
+		text = "Operation Completed Successfully"
+	}
+
+	bot.AddButton("Back", "documents")
+	bot.MakeKeyboard(1)
+	bot.EditMessage(msg.Message, text)
+}
+
+func processDocument(reply *query) {
+	defer bot.DeleteKeyboard()
+	var msg goTelegram.Update
+	doc := mockDocs[reply.UserID]
+
+	msg.Message.MessageID = reply.MessageID
+	msg.Message.Chat.ID = reply.ChatID
+
+	fileDets := reply.Update.Message.File
+
+	text := "Upload The File Associated With The Details Provided In The Last Step"
+
+	if fileDets.FileName != "" {
+		doc.Filename = fileDets.FileName
+		text += "\n\nFIle Received: " + fileDets.FileName
+		bot.AddButton("Upload", "upload")
+	}
+
+	bot.AddButton("Cancel", "bail")
+	bot.MakeKeyboard(1)
+	log.Println(bot.EditMessage(msg.Message, text))
+}
+
+func fillDocument(reply *query) {
+	defer bot.DeleteKeyboard()
+	var (
+		messageUpdate goTelegram.Update
+		text          string
+	)
+	messageUpdate.Message.MessageID = reply.MessageID
+	messageUpdate.Message.Chat.ID = reply.ChatID
+
+	doc := mockDocs[reply.UserID]
+
+	if reply.isEdit {
+		switch reply.ReplyID {
+		case doc.Title.messageID:
+			doc.Title.text = reply.Text
+		case doc.Author.messageID:
+			doc.Author.text = reply.Text
+		case doc.Summary.messageID:
+			doc.Summary.text = reply.Text
+		}
+	} else {
+
+		switch reply.Level {
+		case 0:
+			reply.Level++
+		case 1:
+			doc.Title.text = reply.Text
+			doc.Title.messageID = reply.ReplyID
+			reply.Level++
+
+		case 2:
+			doc.Author.text = reply.Text
+			doc.Author.messageID = reply.ReplyID
+			reply.Level++
+
+		case 3:
+			doc.Summary.text = reply.Text
+			doc.Summary.messageID = reply.ReplyID
+			reply.Level++
+
+		}
+	}
+
+	text = fmt.Sprintf("Complete The Following Details:\n\nDocument Title: %s\nDocument Author: %s\nDocument Summary: %s\n", doc.Title.text, doc.Author.text, doc.Summary.text)
+	if doc.Summary.text != "" {
+		text = text + "\nPlease Check The Document Details And Verify They Are Correct, Press OK To Proceed"
+		bot.AddButton("OK", "processDoc")
+	}
+	bot.AddButton("Cancel", "bail")
+	bot.MakeKeyboard(1)
+
+	if err := bot.EditMessage(messageUpdate.Message, text); err != nil {
+		log.Println(err)
+	}
+}
+
+func uploadDocument(chatID int) {
+
+	var msg goTelegram.Update
+	mockDoc := mockDocs[chatID]
+	reply, _ := get(replies, chatID)
+	fileDets := reply.Update.Message.File
+
+	defer func() {
+		delete(mockDocs, chatID)
+		replies = remove(replies, reply)
+	}()
+
+	userToken, _ := getToken(chatID)
+
+	msg.Message.MessageID = reply.MessageID
+	msg.Message.Chat.ID = reply.ChatID
+
+	if err := bot.GetFile(fileDets.FileID, fileDets.FileName); err != nil {
+		log.Println("Couldn't Pull File From Telegram's Servers")
+		log.Println(err)
+		go giveFeedback(reply, true)
+		return
+	}
+
+	rawFile, err := os.Open(mockDoc.Filename)
+	if err != nil {
+		log.Println("Couldn't Open " + mockDoc.Filename + " For Reading")
+		log.Println(err)
+		return
+	}
+
+	defer rawFile.Close()
+
+	fileBody := new(bytes.Buffer)
+
+	writer := multipart.NewWriter(fileBody)
+
+	filePart, err := writer.CreateFormFile("file", mockDoc.Filename)
+
+	io.Copy(filePart, rawFile)
+
+	writer.WriteField("title", mockDoc.Title.text)
+	writer.WriteField("author", mockDoc.Author.text)
+	writer.WriteField("summary", mockDoc.Summary.text)
+
+	writer.Close()
+
+	req, _ := http.NewRequest("POST", apiURL+"document", fileBody)
+	req.Header.Add("Content-Type", writer.FormDataContentType())
+	req.Header.Add("Authorization", userToken)
+	resp, err := http.DefaultClient.Do(req)
+
+	if err != nil {
+		go giveFeedback(reply, true)
+		log.Println("Couldn't Establish Connection With Bookateria's Servers")
+		log.Println(err)
+		return
+	}
+
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		go giveFeedback(reply, true)
+		log.Println("Couldn't Upload File To Bookateria's Servers")
+		body, _ := ioutil.ReadAll(resp.Body)
+		log.Println(string(body))
+		return
+	}
+
+	go giveFeedback(reply, false)
+
 }
