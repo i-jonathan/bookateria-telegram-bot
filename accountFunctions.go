@@ -4,20 +4,21 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-	"github.com/go-redis/redis/v8"
-	"github.com/yoruba-codigy/goTelegram"
 	"log"
 	"net/http"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/go-redis/redis/v8"
+	"github.com/yoruba-codigy/goTelegram"
 )
 
 func handleLogin(update query) {
 	//Do Random Login Stuff Here
 
 	defer func() {
-		replies = remove(replies, update)
+		replies = remove(replies, &update)
 	}()
 
 	var replyUpdate goTelegram.Update
@@ -61,7 +62,7 @@ func handleLogin(update query) {
 
 	client := redis.NewClient(&redis.Options{
 		Addr: "127.0.0.1:6379",
-		DB: 0,
+		DB:   0,
 	})
 
 	redisTime := 720 * time.Hour
@@ -69,7 +70,9 @@ func handleLogin(update query) {
 	err = client.Set(ctx, strconv.Itoa(update.UserID), loginData.Value, redisTime).Err()
 
 	if err != nil {
+		log.Println(err)
 		bot.EditMessage(replyUpdate.Message, "Login Unsuccessful. Try again shortly")
+		return
 	}
 	bot.EditMessage(replyUpdate.Message, "Signed in Successfully.")
 }
