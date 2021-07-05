@@ -17,3 +17,6 @@
 
 # My input
 .idea
+*.rdb
+*.swp
+*.pdf
