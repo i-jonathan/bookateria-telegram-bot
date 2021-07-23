@@ -3,6 +3,6 @@ module bookateria-telegram
 go 1.16
 
 require (
-	github.com/go-redis/redis/v8 v8.9.0
-	github.com/yoruba-codigy/goTelegram v0.0.2-beta
+	github.com/go-redis/redis/v8 v8.9.0 // indirect
+	github.com/yoruba-codigy/goTelegram v0.0.4-beta // indirect
 )

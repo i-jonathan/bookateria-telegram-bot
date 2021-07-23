@@ -4,10 +4,11 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"github.com/yoruba-codigy/goTelegram"
 	"io"
 	"log"
 	"net/http"
+
+	"github.com/yoruba-codigy/goTelegram"
 )
 
 type setWebHook struct {
@@ -29,26 +30,31 @@ type Result struct {
 
 var bot goTelegram.Bot
 var apiURL = "https://bookateria-api.herokuapp.com/v1/"
-var replies []query
+var replies []*query
+
+//This Is A Hack I'm Not Comfortable With
+//Will Change When I Think Of Something Better
+var mockDocs map[int]*mockDocument
 
 func main() {
 	var err error
+	mockDocs = make(map[int]*mockDocument)
 
-	bot, err = goTelegram.NewBot("891332272:AAG80PYkGjjdEJ-rRIyDxdRpAnVoKTIPqZU")
+	bot, err = goTelegram.NewBot("1777225137:AAGK6Ryx2400k_7CwZSXCsZVHA71SA2JO3Q")
 
 	if err != nil {
-		log.Println(err)
+		log.Fatal(err)
 	}
 
 	fmt.Printf("Bot Name: %s\nBot Username: %s\n", bot.Me.Firstname, bot.Me.Username)
 
 	bot.SetHandler(handler)
 
-	set := setWebhook("https://9ab13c307cbc.ngrok.io")
+	set := setWebhook("https://2fa54f8cdf6c.ngrok.io")
 	fmt.Println(set)
 
 	log.Println("Starting Server")
-	err = http.ListenAndServe(":5000", http.HandlerFunc(bot.UpdateHandler))
+	err = http.ListenAndServe(":8080", http.HandlerFunc(bot.UpdateHandler))
 
 	if err != nil {
 		log.Println("Failed")

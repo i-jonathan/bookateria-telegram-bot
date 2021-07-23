@@ -1,42 +1,82 @@
 package main
 
 import (
-	"github.com/yoruba-codigy/goTelegram"
 	"log"
-
-	//"net/http"
 	"strings"
+
+	"github.com/yoruba-codigy/goTelegram"
 )
 
 func handler(update goTelegram.Update) {
+	checkReplies(update)
 
 	switch update.Type {
 	case "text":
 		go processRequest(update)
 	case "callback":
 		go processCallback(update)
+	case "edited_text":
+		go processEditedText(update)
 	}
 }
 
-func processRequest(update goTelegram.Update) {
+func checkReplies(update goTelegram.Update) {
 
+	if update.Type == "edited_text" {
+		update.Message = update.EditedMessage
+	}
 	if reply, ok := get(replies, update.Message.Chat.ID); ok {
+		reply.Update = update
+		reply.isEdit = false
+		reply.ReplyID = update.Message.MessageID
+		if update.Type == "edited_text" {
+			reply.isEdit = true
+		}
+
 		if reply.UserID == update.Message.From.ID {
 			reply.Text = update.Message.Text
 			switch reply.Type {
 			case "search":
-				search(reply)
+				search(*reply)
 			case "login":
-				err := bot.DeleteMessage(update.Message)
-				if err != nil {
-					log.Println(err)
-				}
-				handleLogin(reply)
+				handleLogin(*reply)
+			case "upload":
+				fillDocument(reply)
+			case "processDoc":
+				processDocument(reply)
 			}
 		}
 	}
 
-	chat := update.Message.Chat
+}
+
+func showMainMenu(update goTelegram.Update) {
+	bot.DeleteKeyboard()
+	var msg goTelegram.Update
+
+	text := "Hello, Where Would You Like To Go?"
+
+	if update.Message.Chat.Type == "private" || update.CallbackQuery.Message.Chat.Type == "private" {
+		bot.AddButton("Account", "account")
+	}
+	bot.AddButton("Documents", "documents")
+	bot.MakeKeyboard(2)
+
+	if update.Type == "text" {
+		chat := update.Message.Chat
+		if err := bot.SendMessage(text, chat); err != nil {
+			log.Println(err)
+		}
+	} else {
+		msg.Message.MessageID = update.CallbackQuery.Message.MessageID
+		msg.Message.Chat.ID = update.CallbackQuery.From.ID
+		if err := bot.EditMessage(msg.Message, text); err != nil {
+			log.Println(err)
+		}
+	}
+}
+
+func processRequest(update goTelegram.Update) {
 
 	parts := strings.Fields(update.Message.Text)
 	var command string
@@ -53,31 +93,39 @@ func processRequest(update goTelegram.Update) {
 
 	switch command {
 	case "/start":
-		//bot.SendMessage("Hello", chat)
-		bot.DeleteKeyboard()
 
-		if update.Message.Chat.Type == "private" {
-			bot.AddButton("Account", "account")
-		}
+		showMainMenu(update)
 
-		bot.AddButton("Documents", "documents")
-		bot.MakeKeyboard(2)
-		err := bot.SendMessage("Hello. Where would you like to go?", chat)
-		if err != nil {
-			log.Println(err)
-		}
 	}
 }
 
-func processCallback(update goTelegram.Update) {
-	defer func(bot *goTelegram.Bot, callbackID string) {
-		err := bot.AnswerCallback(callbackID)
-		if err != nil {
-			log.Println(err)
-		}
-	}(&bot, update.CallbackQuery.ID)
+func processEditedText(update goTelegram.Update) {
+	upd := goTelegram.Update{
+		Message: update.EditedMessage,
+	}
 
-	var command string
+	processRequest(upd)
+}
+
+func processCallback(update goTelegram.Update) {
+	answeredCallback := false
+	defer func() {
+		if !answeredCallback {
+
+			err := bot.AnswerCallback(update.CallbackQuery.ID, "", false)
+
+			if err != nil {
+				log.Println(err)
+			}
+		}
+	}()
+
+	command := update.CallbackQuery.Data
+
+	if update.CallbackQuery.Data == "bail" {
+		replies = removeByChatID(replies, update.CallbackQuery.From.ID)
+		command = "documents"
+	}
 
 	if strings.HasPrefix(update.CallbackQuery.Data, "docID") {
 		command = "docID"
@@ -85,19 +133,19 @@ func processCallback(update goTelegram.Update) {
 		command = "all"
 	} else if strings.HasPrefix(update.CallbackQuery.Data, "contsearch") {
 		command = "contsearch"
-	} else {
-		command = update.CallbackQuery.Data
 	}
 
 	switch command {
+
+	//Menu Cases
 	case "account":
 		bot.DeleteKeyboard()
 		bot.AddButton("Login", "login")
 		bot.AddButton("Register", "register")
 		bot.AddButton("Logout", "logout")
+		bot.AddButton("Back", "main-menu")
 		bot.MakeKeyboard(3)
-		err := bot.EditMessage(update.CallbackQuery.Message, "Accounts")
-		if err != nil {
+		if err := bot.EditMessage(update.CallbackQuery.Message, "Accounts"); err != nil {
 			log.Println(err)
 		}
 
@@ -114,35 +162,58 @@ func processCallback(update goTelegram.Update) {
 		bot.AddButton("Search", "search")
 		bot.AddButton("Tags", "tags")
 		bot.AddButton("Categories", "cat")
+		bot.AddButton("Back", "main-menu")
 
 		bot.MakeKeyboard(3)
-		err := bot.EditMessage(update.CallbackQuery.Message, "Documents")
-		if err != nil {
+		if err := bot.EditMessage(update.CallbackQuery.Message, "Documents"); err != nil {
 			log.Println(err)
 		}
+
+	case "main-menu":
+		showMainMenu(update)
+
+		//Operation Cases
 	case "all":
 		text := fetchAll(update.CallbackQuery.Data)
-		err := bot.EditMessage(update.CallbackQuery.Message, text)
-		if err != nil {
+		if err := bot.EditMessage(update.CallbackQuery.Message, text); err != nil {
 			log.Println(err)
 		}
+
+	case "add":
+		bot.DeleteKeyboard()
+
+		if _, err := getToken(update.CallbackQuery.From.ID); err != nil {
+			bot.AnswerCallback(update.CallbackQuery.ID, "Login Is Required To Add A Document", true)
+			answeredCallback = true
+			return
+		}
+
+		newReply := &query{
+			UserID:    update.CallbackQuery.From.ID,
+			ChatID:    update.CallbackQuery.Message.Chat.ID,
+			MessageID: update.CallbackQuery.Message.MessageID,
+			Type:      "upload",
+		}
+
+		mockDocs[update.CallbackQuery.From.ID] = &mockDocument{}
+		replies = add(replies, newReply)
+		fillDocument(newReply)
+
 	case "docID":
 		text := fetchOne(update.CallbackQuery.Data)
-		err := bot.SendMessage(text, update.CallbackQuery.Message.Chat)
-		if err != nil {
+		if err := bot.SendMessage(text, update.CallbackQuery.Message.Chat); err != nil {
 			log.Println(err)
 		}
 
 	case "search":
 		bot.DeleteKeyboard()
 		text := "Type Your Query: "
-		newReply := query{UserID: update.CallbackQuery.From.ID,
+		newReply := &query{UserID: update.CallbackQuery.From.ID,
 			ChatID:    update.CallbackQuery.Message.Chat.ID,
 			MessageID: update.CallbackQuery.Message.MessageID,
 			Type:      "search"}
 		replies = add(replies, newReply)
-		err := bot.EditMessage(update.CallbackQuery.Message, text)
-		if err != nil {
+		if err := bot.EditMessage(update.CallbackQuery.Message, text); err != nil {
 			log.Println(err)
 		}
 
@@ -160,15 +231,25 @@ func processCallback(update goTelegram.Update) {
 		bot.DeleteKeyboard()
 		text := "Please Enter Your Bookateria Account Credentials in the format below\n\nEmail:\nPassword:\n\n" +
 			"Example: \njohndoe@gmail.com\nadmin@123!"
-		newReply := query{UserID: update.CallbackQuery.From.ID,
+		newReply := &query{UserID: update.CallbackQuery.From.ID,
 			ChatID:    update.CallbackQuery.Message.Chat.ID,
 			MessageID: update.CallbackQuery.Message.MessageID,
 			Type:      "login"}
 
 		replies = add(replies, newReply)
-		err := bot.EditMessage(update.CallbackQuery.Message, text)
-		if err != nil {
+		bot.MakeKeyboard(1)
+		if err := bot.EditMessage(update.CallbackQuery.Message, text); err != nil {
 			log.Println(err)
 		}
+
+	case "processDoc":
+		bot.DeleteKeyboard()
+		reply, _ := get(replies, update.CallbackQuery.From.ID)
+		reply.Type = "processDoc"
+		processDocument(reply)
+
+	case "upload":
+		uploadDocument(update.CallbackQuery.From.ID)
+		delete(mockDocs, update.CallbackQuery.From.ID)
 	}
 }
