@@ -21,7 +21,7 @@ func fetchAll(callbackCode string) string {
 	bot.DeleteKeyboard()
 	var response ResponseStruct
 
-	url := apiURL + "document?page=" + page + "&page_size=1"
+	url := apiURL + "document?page=" + page + "&page_size=10"
 
 	resp, err := http.Get(url)
 
@@ -130,7 +130,7 @@ func search(query query) {
 	update.Message.Chat.ID = query.ChatID
 
 	//Make request to the api for documents with the specified title
-	resp, err := http.Get(apiURL + "document?page_size=1&search=" + searchText + "&page=" + strconv.Itoa(page))
+	resp, err := http.Get(apiURL + "document?page_size=10&search=" + searchText + "&page=" + strconv.Itoa(page))
 
 	if err != nil {
 		log.Println(err)
