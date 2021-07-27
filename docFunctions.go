@@ -120,6 +120,7 @@ func search(query query) {
 
 	params := url.Values{}
 	page := 1
+	pageSize := 8
 	searchText := query.Text
 
 	//check if this function is called from a prev or next button
@@ -134,7 +135,7 @@ func search(query query) {
 	update.Message.Chat.ID = query.ChatID
 
 	params.Add("page", strconv.Itoa(page))
-	params.Add("page_size", "8")
+	params.Add("page_size", strconv.Itoa(pageSize))
 	params.Add("search", searchText)
 
 	//Make request to the api for documents with the specified title
@@ -166,10 +167,10 @@ func search(query query) {
 
 	//Process returned results from the api
 	text := fmt.Sprintf("Showing Results For: %s\n", searchText)
-
 	for index, doc := range response.Result {
-		text += fmt.Sprintf("%d. %s by %s\n", index+1, doc.Title, doc.Author)
-		bot.AddButton(strconv.Itoa(index+1), "docID-"+strconv.Itoa(doc.Id))
+		currIndex := (pageSize * page) - pageSize + index
+		text += fmt.Sprintf("%d. %s by %s\n", currIndex+1, doc.Title, doc.Author)
+		bot.AddButton(strconv.Itoa(currIndex+1), "docID-"+strconv.Itoa(doc.Id))
 	}
 
 	bot.MakeKeyboard(len(response.Result))
