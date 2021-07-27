@@ -9,6 +9,7 @@ import (
 	"log"
 	"mime/multipart"
 	"net/http"
+	"net/url"
 	"os"
 	"strconv"
 	"strings"
@@ -112,9 +113,12 @@ func search(query query) {
 		replies = remove(replies, &query)
 	}()
 
-	var update goTelegram.Update
-	var response ResponseStruct
+	var (
+		update   goTelegram.Update
+		response ResponseStruct
+	)
 
+	params := url.Values{}
 	page := 1
 	searchText := query.Text
 
@@ -129,16 +133,16 @@ func search(query query) {
 	update.Message.MessageID = query.MessageID
 	update.Message.Chat.ID = query.ChatID
 
+	params.Add("page", strconv.Itoa(page))
+	params.Add("page_size", "8")
+	params.Add("search", searchText)
+
 	//Make request to the api for documents with the specified title
-	resp, err := http.Get(apiURL + "document?page_size=10&search=" + searchText + "&page=" + strconv.Itoa(page))
+	resp, err := http.Get(apiURL + "document?" + params.Encode())
 
 	if err != nil {
 		log.Println(err)
-		bot.AddButton("Back", "documents")
-		bot.MakeKeyboard(1)
-		if err := bot.EditMessage(update.Message, "An Error Occurred While Processing Your Request"); err != nil {
-			log.Println(err)
-		}
+		go giveFeedback(&query, true)
 		return
 	}
 
@@ -146,11 +150,7 @@ func search(query query) {
 
 	if err != nil {
 		log.Println(err)
-		bot.AddButton("Back", "documents")
-		bot.MakeKeyboard(1)
-		if err := bot.EditMessage(update.Message, "Couldn't Find Any Document That Matches Your Search Term: "+searchText); err != nil {
-			log.Println(err)
-		}
+		go giveFeedback(&query, true)
 		return
 	}
 
@@ -158,7 +158,7 @@ func search(query query) {
 	if len(response.Result) == 0 {
 		bot.AddButton("Back", "documents")
 		bot.MakeKeyboard(1)
-		if err := bot.EditMessage(update.Message, "Couldn't Find Any Document That Matches Your Search Term"); err != nil {
+		if err := bot.EditMessage(update.Message, "Couldn't Find Any Document That Matches Your Search Term: "+searchText); err != nil {
 			log.Println(err)
 		}
 		return
