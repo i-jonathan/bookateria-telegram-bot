@@ -50,7 +50,7 @@ func main() {
 
 	bot.SetHandler(handler)
 
-	set := setWebhook("https://2fa54f8cdf6c.ngrok.io")
+	set := setWebhook("https://3fc5ce2dd155.ngrok.io")
 	fmt.Println(set)
 
 	log.Println("Starting Server")
