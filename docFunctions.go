@@ -167,10 +167,11 @@ func search(query query) {
 
 	//Process returned results from the api
 	text := fmt.Sprintf("Showing Results For: %s\n", searchText)
-	for index, doc := range response.Result {
-		currIndex := (pageSize * page) - pageSize + index
-		text += fmt.Sprintf("%d. %s by %s\n", currIndex+1, doc.Title, doc.Author)
-		bot.AddButton(strconv.Itoa(currIndex+1), "docID-"+strconv.Itoa(doc.Id))
+	currIndex := (pageSize * page) - pageSize
+	for _, doc := range response.Result {
+		currIndex++
+		text += fmt.Sprintf("%d. %s by %s\n", currIndex, doc.Title, doc.Author)
+		bot.AddButton(strconv.Itoa(currIndex), "docID-"+strconv.Itoa(doc.Id))
 	}
 
 	bot.MakeKeyboard(len(response.Result))
